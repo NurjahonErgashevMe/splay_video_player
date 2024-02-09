@@ -1,0 +1,30 @@
+* {
+  padding: 0px;
+  margin: 0px;
+  box-sizing: border-box;
+  text-decoration: none;
+  list-style: none;
+}
+.progressBar {
+  width: 100%;
+  height: 8px;
+  background-color: gray;
+  display: flex;
+  cursor: pointer;
+  align-items: center;
+  .played {
+    height: 8px;
+    background-color: blue;
+    position: relative;
+    .circle {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      position: absolute;
+      right: -5px;
+      top: -50%;
+      transform: translateY(-100%);
+      background-color: red;
+    }
+  }
+}
