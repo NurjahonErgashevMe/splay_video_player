@@ -268,9 +268,9 @@ IProps) {
   };
 
   const goToPosition = (position: number) => {
+    setProgress(() => position);
     if (videoComponent.current) {
       videoComponent.current.currentTime = position;
-      setProgress(position);
     }
   };
 
@@ -325,8 +325,8 @@ IProps) {
         return;
       }
 
+      setProgress(() => current + seconds);
       videoComponent.current.currentTime += seconds;
-      setProgress(videoComponent.current.currentTime + seconds);
     }
   };
 
@@ -339,9 +339,9 @@ IProps) {
         setProgress(0);
         return;
       }
+      setProgress(() => current - seconds);
 
       videoComponent.current.currentTime -= seconds;
-      setProgress(videoComponent.current.currentTime - seconds);
     }
   };
 
@@ -705,11 +705,11 @@ IProps) {
               </div>
 
               <div className="item-control">
-                <FaUndoAlt onClick={() => previousSeconds(5)} />
+                <FaUndoAlt onClick={() => previousSeconds(10)} />
               </div>
 
               <div className="item-control">
-                <FaRedoAlt onClick={() => nextSeconds(5)} />
+                <FaRedoAlt onClick={() => nextSeconds(10)} />
               </div>
 
               {muted === false && (
