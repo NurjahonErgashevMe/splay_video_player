@@ -76,18 +76,18 @@ export interface IControlsProps {
   show: boolean;
   primaryColor: string;
   progressVideo: number;
+  pip: boolean;
 }
 
 export const Controlls = styled.div<IControlsProps>`
   opacity: ${(props) => (props.show ? 1 : 0)};
   transform: ${(props) => (props.show ? "scale(1)" : "scale(1.2)")};
-
   position: absolute;
   top: 0;
   width: 100%;
   height: 100%;
   overflow: hidden;
-  display: flex;
+  display: ${(props) => (props.pip ? "none" : "flex")};
   flex-direction: column;
   justify-content: flex-end;
   transition: all 0.4s ease;
@@ -108,24 +108,39 @@ export const Controlls = styled.div<IControlsProps>`
   .back {
     margin-bottom: auto;
     margin-top: 30px;
-    display: flex;
     div {
+      height: 50px;
       display: flex;
       font-size: 20px;
       align-items: center;
       transition: all 0.4s ease;
       overflow: hidden;
-
-      span {
+      .back__text {
+        padding: 0;
+        margin-left: 0;
         margin-left: -100%;
         opacity: 0;
         transition: all ease 0.2s;
+        width: 100%;
+        h3 {
+          margin: 0;
+          font-size: 22px;
+          font-weight: 500;
+          line-height: 32px;
+        }
+        p {
+          margin: 0;
+          font-size: 18px;
+          font-weight: 400;
+          line-height: 32px;
+          color: #b8b8b8;
+        }
       }
 
       &:hover {
         transform: translateX(-10px);
 
-        span {
+        .back__text {
           margin-left: 0;
           opacity: 1;
         }
@@ -196,7 +211,6 @@ export const Controlls = styled.div<IControlsProps>`
       width: 30px;
       height: 29.23px;
       transition: all 0.4s ease;
-      fill: rgb(255, 255, 255);
       &:hover {
         fill: ${(props) => props.primaryColor};
         color: ${(props) => props.primaryColor};
@@ -541,34 +555,55 @@ export const IconPlayBackRate = styled.div`
   }
 `;
 
-export const ItemPlaybackRate = styled(ItemControllBar)`
+export const ItemPlaybackRate = styled(ItemControllBar)<{
+  primaryColor: string;
+}>`
   cursor: pointer;
   font-weight: bold;
   max-width: 304px;
-  & > div:first-child {
-    height: 100%;
-    background: rgb(20, 20, 20);
+  max-height: 240px;
+  display: flex;
+  border-radius: 16px;
+  background: rgb(20, 20, 20);
+  .playback-rates {
+    height: 90%;
+    margin-top: 10%;
     display: flex;
     flex-direction: column;
-    border-radius: 16px;
-    overflow: hidden;
-    padding: 8px 0;
+    overflow-y: scroll;
+    /* padding: 8px 0; */
     .title {
       font-size: 20px;
       font-weight: bold;
       padding: 0px 32px 0px 32px;
       margin: 0;
     }
+    /* Ширина и цвет полосы прокрутки */
+    &::-webkit-scrollbar {
+      width: 8px;
+      border-radius: 8px;
+      background: #2c2d35;
+      max-height: 50px;
+      height: 50px;
+    }
+    &::-webkit-scrollbar-track {
+    }
+
+    /* Цвет и стиль полосы прокрутки */
+    &::-webkit-scrollbar-thumb {
+      border-radius: 8px;
+      background: ${(props) => props.primaryColor};
+    }
 
     .item {
-      padding: 0 16px;
       display: flex;
-      font-size: 14px;
-      padding: 10px;
-      cursor: pointer;
-      transition: all 0.4s ease;
       flex-direction: row;
       align-items: center;
+      font-size: 14px;
+      padding: 10px 0;
+      cursor: pointer;
+      transition: all 0.4s ease;
+      height: 30px;
       border-bottom: 1px solid rgb(44, 45, 53);
       &:last-child {
         border-bottom: 0;
@@ -577,9 +612,10 @@ export const ItemPlaybackRate = styled(ItemControllBar)`
         background: rgb(44, 45, 53);
       }
       .bold {
-        padding: 0px 32px;
+        width: 64px;
       }
-      .check{
+      .check {
+        width: 30px;
         padding: 0;
       }
     }
@@ -628,70 +664,81 @@ export const ItemNext = styled(ItemControllBar)`
   }
 `;
 
-export const ItemListReproduction = styled(ItemControllBar)`
-  max-width: 400px;
-  overflow: hidden;
-
-  & > div:first-child {
-    background: #333;
+export const ItemListReproduction = styled(ItemControllBar)<{
+  primaryColor: string;
+}>`
+  cursor: pointer;
+  font-weight: bold;
+  max-width: 304px;
+  max-height: 240px;
+  display: flex;
+  border-radius: 16px;
+  background: rgb(20, 20, 20);
+  .list-reproduction {
+    height: 90%;
+    margin-top: 10%;
     display: flex;
     flex-direction: column;
-    border-radius: 5px;
-    overflow: hidden;
+    overflow-y: scroll;
+    /* padding: 8px 0; */
+    .title {
+      font-size: 20px;
+      font-weight: bold;
+      padding: 0px 32px 0px 32px;
+      margin: 0;
+    }
+    /* Ширина и цвет полосы прокрутки */
+    &::-webkit-scrollbar {
+      width: 8px;
+      border-radius: 8px;
+      background: #2c2d35;
+      max-height: 50px;
+      height: 50px;
+    }
+    &::-webkit-scrollbar-track {
+    }
+
+    /* Цвет и стиль полосы прокрутки */
+    &::-webkit-scrollbar-thumb {
+      border-radius: 8px;
+      background: ${(props) => props.primaryColor};
+    }
+
+    .item-list-reproduction {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      font-size: 14px;
+      padding: 10px 0;
+      cursor: pointer;
+      transition: all 0.4s ease;
+      height: 30px;
+      border-bottom: 1px solid rgb(44, 45, 53);
+      &:last-child {
+        border-bottom: 0;
+      }
+      &:hover {
+        background: rgb(44, 45, 53);
+      }
+      .bold {
+        width: 64px;
+      }
+      .check {
+        width: 30px;
+        padding: 0;
+      }
+    }
+    .selected {
+      background-color: red;
+    }
+
+    svg {
+      font-size: 14px !important;
+      margin-right: 5px;
+    }
 
     .bold {
       font-weight: bold;
-    }
-
-    .title {
-      font-size: 18px;
-      font-weight: bold;
-      padding: 10px;
-      margin: 0;
-    }
-
-    .list-list-reproduction {
-      display: flex;
-      flex-direction: column;
-      max-height: 400px;
-      overflow: auto;
-
-      &::-webkit-scrollbar-track {
-        background-color: #222;
-      }
-
-      &::-webkit-scrollbar {
-        width: 8px;
-      }
-
-      &::-webkit-scrollbar-thumb {
-        background: #333;
-      }
-
-      .item-list-reproduction {
-        background: #222;
-        display: flex;
-        flex-direction: row;
-        font-size: 14px;
-        padding: 10px;
-        cursor: pointer;
-        transition: all 0.4s ease;
-        align-items: center;
-
-        &:hover {
-          background: #333;
-        }
-
-        .percent {
-          height: 3px;
-          width: 100px;
-          margin-left: auto;
-        }
-      }
-
-      .selected {
-        background: #333;
-      }
     }
   }
 `;

@@ -4,18 +4,30 @@ import { useEffect, useState, useRef, SyntheticEvent } from "react";
 import i18n from "i18next";
 import { useTranslation, initReactI18next } from "react-i18next";
 import {
-  FaUndoAlt,
-  FaVolumeUp,
   FaVolumeDown,
   FaVolumeOff,
   FaVolumeMute,
   FaExpand,
-  FaCog,
-  FaClone,
   FaCompress,
-  FaRedoAlt,
 } from "react-icons/fa";
 import { FiCheck, FiX } from "react-icons/fi";
+
+import Prev10Icon from "public/icons/rotate-left_10.svg";
+import Next10Icon from "public/icons/rotate-right_10.svg";
+import PlayListIcon from "public/icons/playlist.svg";
+import SettingsIcon from "public/icons/settings.svg";
+import VolumeIcon from "public/icons/volume.svg";
+import SkipIcon from "public/icons/skip.svg";
+import BackIcon from "public/icons/back.svg";
+import ArrowLeftIcon from "public/icons/arrow-left.svg";
+import MessageIcon from "public/icons/message.svg";
+import ResumeIcon from "public/icons/resume.svg";
+import PlayIcon from "public/icons/play.svg";
+import FullScreenIcon from "public/icons/fullscreen.svg";
+import SelfSizeIcon from "public/icons/resume.svg";
+import CheckIcon from "public/icons/check.svg";
+
+import SVG from "react-inlinesvg";
 import {
   Loading,
   StandyByInfo,
@@ -30,14 +42,10 @@ import {
   ItemListQuality,
 } from "./styles";
 import translations from "../../public/locales";
-import {
-  IconPlayerPlayFilled,
-  IconPlayerPauseFilled,
-  IconArrowNarrowLeft,
-} from "@tabler/icons-react";
-import {} from "@tabler/icons-react";
-import { IconPlayerSkipForwardFilled } from "@tabler/icons-react";
-import { IconPlayerSkipBackFilled } from "@tabler/icons-react";
+
+import { useFullscreen } from "../hooks/useFullScreen";
+import { useMergedRef } from "../hooks/useMergedRef";
+import { useHotkeys } from "../hooks/useHotKeys/useHotKeys";
 
 i18n.use(initReactI18next).init({
   resources: translations,
@@ -118,7 +126,7 @@ export default function ReactNetflixPlayer({
   extraInfoMedia = false,
   playerLanguage = LanguagesPlayer.ru,
 
-  fullPlayer = true,
+  fullPlayer = false,
   backButton = undefined,
 
   src,
@@ -148,11 +156,11 @@ export default function ReactNetflixPlayer({
   secundaryColor = "#ffffff",
   fontFamily = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif",
 
-  playbackRateOptions = ["0.25", "0.5", "0.75", "Normal", "1.25", "1.5", "2"],
+  playbackRateOptions = ["0.25", "0.5", "0.75", "1", "1.25", "1.5", "2"],
   playbackRateStart = 1,
 }: // subtitleMedia,
 IProps) {
-  // Referências
+  // References
   const videoComponent = useRef<null | HTMLVideoElement>(null);
   const timerRef = useRef<null | any>(null);
   const timerBuffer = useRef<null | any>(null);
@@ -160,13 +168,18 @@ IProps) {
   const listReproduction = useRef<null | HTMLDivElement>(null);
 
   // Estados
+  const {
+    toggle: fullScreenToggle,
+    fullscreen: fullScreen,
+    ref: fullScreenRef,
+  } = useFullscreen();
   const [videoReady, setVideoReady] = useState(false);
   const [playing, setPlaying] = useState(true);
   const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState(0);
   const [end, setEnd] = useState(false);
   const [controlBackEnd, setControlBackEnd] = useState(false);
-  const [fullScreen, setFullScreen] = useState(false);
+
   const [volume, setVolume] = useState(100);
   const [muted, setMuted] = useState(false);
   const [error, setError] = useState<any>(false);
@@ -178,7 +191,7 @@ IProps) {
   );
   // const [choseBuffer, setChoseBuffer] = useState<number>(0);
   const [started, setStarted] = useState(false);
-
+  const [isPip, setIsPip] = useState(false);
   const [showControlVolume, setShowControlVolume] = useState(false);
   const [showQuality, setShowQuality] = useState(false);
   const [showDataNext, setShowDataNext] = useState(false);
@@ -186,7 +199,21 @@ IProps) {
   const [showPlaybackRate, setShowPlaybackRate] = useState(false);
   const [showReproductionList, setShowReproductionList] = useState(false);
 
+  // i18n hook
   const { t } = useTranslation();
+
+  // other hooks
+  const mergedPlayerRef = useMergedRef(playerElement, fullScreenRef);
+  useHotkeys([
+    ["Space", stopVideo],
+    ["ArrowLeft", () => previousSeconds(10)],
+    [
+      "ArrowRight",
+      () => {
+        nextSeconds(10);
+      },
+    ],
+  ]);
 
   // const [, setActualBuffer] = useState({
   //   index: 0,
@@ -275,9 +302,8 @@ IProps) {
   };
 
   const play = () => {
+    setPlaying(() => !playing);
     if (videoComponent.current) {
-      setPlaying(!playing);
-
       if (videoComponent.current.paused) {
         videoComponent.current.play();
         return;
@@ -313,7 +339,7 @@ IProps) {
     }
   };
 
-  const nextSeconds = (seconds: number) => {
+  function nextSeconds(seconds: number) {
     if (videoComponent.current) {
       const current = videoComponent.current.currentTime;
       const total = videoComponent.current.duration;
@@ -328,9 +354,9 @@ IProps) {
       setProgress(() => current + seconds);
       videoComponent.current.currentTime += seconds;
     }
-  };
+  }
 
-  const previousSeconds = (seconds: number) => {
+  function previousSeconds(seconds: number) {
     if (videoComponent.current) {
       const current = videoComponent.current.currentTime;
 
@@ -343,7 +369,7 @@ IProps) {
 
       videoComponent.current.currentTime -= seconds;
     }
-  };
+  }
 
   const startVideo = () => {
     if (videoComponent.current) {
@@ -392,49 +418,13 @@ IProps) {
     }
   };
 
-  const exitFullScreen = () => {
-    if (document.fullscreenElement) {
-      if (document.exitFullscreen) {
-        document.exitFullscreen();
-      }
-
-      setFullScreen(false);
-    }
-  };
-
-  const enterFullScreen = () => {
-    if (playerElement.current) {
-      setShowInfo(true);
-      if (playerElement.current.requestFullscreen) {
-        playerElement.current.requestFullscreen();
-        setFullScreen(true);
-      }
-    }
-  };
-
   const chooseFullScreen = () => {
     if (playerElement.current) {
-      if (document.fullscreenElement) {
-        document.exitFullscreen();
-        return;
+      fullScreenToggle();
+      if (fullScreen) {
+        setShowInfo(() => true);
       }
-
-      setShowInfo(true);
-
-      if (playerElement.current.requestFullscreen) {
-        playerElement.current.requestFullscreen();
-      }
-      setFullScreen(true);
     }
-  };
-
-  const setStateFullScreen = () => {
-    if (!document.fullscreenElement) {
-      setFullScreen(false);
-      return;
-    }
-
-    setFullScreen(true);
   };
 
   const controllScreenTimeOut = () => {
@@ -460,8 +450,8 @@ IProps) {
     timerRef.current = setTimeout(controllScreenTimeOut, 5000);
   };
 
-  const getKeyBoardInteration = (e: KeyboardEvent) => {
-    if (e.keyCode === 32 && videoComponent.current) {
+  function stopVideo() {
+    if (videoComponent.current) {
       if (videoComponent.current.paused) {
         videoComponent.current.play();
         setPlaying(true);
@@ -472,7 +462,7 @@ IProps) {
         hoverScreen();
       }
     }
-  };
+  }
 
   const scrollToSelected = () => {
     const element = listReproduction.current;
@@ -480,8 +470,8 @@ IProps) {
       const selected = element.getElementsByClassName(
         "selected"
       )[0] as HTMLElement;
-      const position = selected.offsetTop;
-      const height = selected.offsetHeight;
+      const position = selected?.offsetTop;
+      const height = selected?.offsetHeight;
       element.scrollTop = position - height * 2;
     }
   };
@@ -499,6 +489,26 @@ IProps) {
       scrollToSelected();
     }
   }, [showReproductionList]);
+
+  useEffect(() => {
+    const videoElement = videoComponent?.current;
+
+    const handleEnterPip = () => {
+      setIsPip(true);
+    };
+
+    const handleLeavePip = () => {
+      setIsPip(false);
+    };
+
+    videoElement?.addEventListener("enterpictureinpicture", handleEnterPip);
+    videoElement?.addEventListener("leavepictureinpicture", handleLeavePip);
+
+    return () => {
+      videoElement.removeEventListener("enterpictureinpicture", handleEnterPip);
+      videoElement.removeEventListener("leavepictureinpicture", handleLeavePip);
+    };
+  }, []);
 
   useEffect(() => {
     if (src && videoComponent.current) {
@@ -520,21 +530,6 @@ IProps) {
     }
   }, [src]);
 
-  useEffect(() => {
-    document.addEventListener("keydown", getKeyBoardInteration, false);
-    playerElement.current &&
-      playerElement.current.addEventListener(
-        "fullscreenchange",
-        setStateFullScreen,
-        false
-      );
-  }, []);
-
-  // When changes happen in fullscreen document, teh state of fullscreen is changed
-  useEffect(() => {
-    setStateFullScreen();
-  }, [document.fullscreenElement]);
-
   function renderLoading() {
     return (
       <Loading color={primaryColor}>
@@ -552,7 +547,10 @@ IProps) {
       <StandyByInfo
         primaryColor={primaryColor}
         secundaryColor={secundaryColor}
-        show={showInfo === true && videoReady === true && playing === false}
+        show={
+          (showInfo === true && videoReady === true && playing === false) ||
+          isPip
+        }
       >
         {(title || subTitle) && (
           <section className="center">
@@ -602,7 +600,10 @@ IProps) {
                   </p>
                   <div className="links-error">
                     {qualities.map((item) => (
-                      <div onClick={() => onChangeQuality(item.id)}>
+                      <div
+                        key={item.id}
+                        onClick={() => onChangeQuality(item.id)}
+                      >
                         {item.prefix && <span>HD</span>}
                         <span>{item.nome}</span>
                         {item.playing && <FiX />}
@@ -618,10 +619,32 @@ IProps) {
     );
   }
 
+  const handleTogglePip = async () => {
+    try {
+      if (videoComponent.current) {
+        if (document.pictureInPictureElement) {
+          setPlaying(() => true);
+          setIsPip(() => false);
+          await document.exitPictureInPicture();
+        } else {
+          setPlaying(() => false);
+          setIsPip(() => true);
+          await videoComponent.current.requestPictureInPicture();
+        }
+      }
+    } catch (error) {
+      setPlaying(() => true);
+      setIsPip(() => false);
+      console.error(
+        "Ошибка включения/отключения режима Picture-in-Picture:",
+        error
+      );
+    }
+  };
   return (
     <Container
       onMouseMove={hoverScreen}
-      ref={playerElement}
+      ref={mergedPlayerRef}
       onDoubleClick={chooseFullScreen}
       fullPlayer={fullPlayer}
       hideVideo={!!error}
@@ -632,19 +655,20 @@ IProps) {
         !end &&
         renderLoading()}
 
-      {!!overlayEnabled && renderInfoVideo()}
+      {(!!overlayEnabled || isPip) && renderInfoVideo()}
 
       {renderCloseVideo()}
 
       <video
         ref={videoComponent}
-        src={src}
         controls={false}
         onCanPlay={() => startVideo()}
         onTimeUpdate={timeUpdate}
         onError={erroVideo}
         onEnded={onEndedFunction}
-      />
+        muted={muted}
+        src={src}
+      ></video>
       {/* <track
         label="English"
         kind="subtitles"
@@ -654,15 +678,28 @@ IProps) {
       /> */}
 
       <Controlls
-        show={showControls === true && videoReady === true && error === false}
+        show={
+          !isPip ||
+          (showControls === true && videoReady === true && error === false)
+        }
         primaryColor={primaryColor}
         progressVideo={(progress * 100) / duration}
+        pip={isPip}
       >
         {backButton && (
           <div className="back">
-            <div onClick={backButton} style={{ cursor: "pointer" }}>
-              <IconArrowNarrowLeft width={38} height={38} color="#fff" />
-              <span>{t("goBack", { lng: playerLanguage })}</span>
+            <div
+              onClick={() => {
+                handleTogglePip();
+                backButton();
+              }}
+              style={{ cursor: "pointer" }}
+            >
+              <SVG src={ArrowLeftIcon} width={38} height={38} fill={"#fff"} />
+              <span className="back__text">
+                <h3>{dataPrev?.title}</h3>
+                <p>{dataPrev?.description}</p>
+              </span>
             </div>
           </div>
         )}
@@ -700,16 +737,31 @@ IProps) {
           <div className="controlls">
             <div className="start">
               <div className="item-control">
-                {!playing && <IconPlayerPlayFilled onClick={play} />}
-                {playing && <IconPlayerPauseFilled onClick={play} />}
+                <SVG
+                  width={28}
+                  height={30}
+                  src={playing ? ResumeIcon : PlayIcon}
+                  onClick={play}
+                />
               </div>
 
               <div className="item-control">
-                <FaUndoAlt onClick={() => previousSeconds(10)} />
+                <SVG
+                  src={Prev10Icon}
+                  fill="#fff"
+                  width={28}
+                  height={32}
+                  onClick={() => previousSeconds(10)}
+                />
               </div>
 
               <div className="item-control">
-                <FaRedoAlt onClick={() => nextSeconds(10)} />
+                <SVG
+                  src={Next10Icon}
+                  width={28}
+                  height={32}
+                  onClick={() => nextSeconds(10)}
+                />
               </div>
 
               {muted === false && (
@@ -736,7 +788,10 @@ IProps) {
                   )}
 
                   {volume >= 60 && (
-                    <FaVolumeUp
+                    <SVG
+                      src={VolumeIcon}
+                      width={28}
+                      height={32}
                       onMouseEnter={() => setShowControlVolume(true)}
                       onClick={() => setMuttedAction(true)}
                     />
@@ -786,22 +841,28 @@ IProps) {
                   onMouseLeave={() => setShowPlaybackRate(false)}
                 >
                   {showPlaybackRate === true && (
-                    <ItemPlaybackRate>
-                      <div>
-                        {playbackRateOptions.map((item) => (
+                    <ItemPlaybackRate primaryColor={primaryColor}>
+                      <div className="playback-rates">
+                        {playbackRateOptions.map((item, index) => (
                           <div
                             className="item"
                             onClick={() => onChangePlayBackRate(item)}
+                            key={index}
                           >
-                            {(+item === +playbackRate ||
-                              (item === "Normal" && +playbackRate === 1)) && (
-                              <div className="check">
-                                {FiCheck({})} {item}
-                              </div>
-                            )}
-                            <div className="bold">
-                              {item === "Normal" ? null : `${item}x`}
+                            <div className="check">
+                              {+item === +playbackRate && (
+                                <>
+                                  <SVG
+                                    width={10}
+                                    height={10}
+                                    src={CheckIcon}
+                                    fill="transparent"
+                                    stroke="#fff"
+                                  ></SVG>
+                                </>
+                              )}
                             </div>
+                            <div className="bold">{`${item}x`}</div>
                           </div>
                         ))}
                       </div>
@@ -843,7 +904,10 @@ IProps) {
                     </ItemNext>
                   )}
 
-                  <IconPlayerSkipBackFilled
+                  <SVG
+                    src={BackIcon}
+                    width={28}
+                    height={32}
                     onClick={onNextClick}
                     onMouseEnter={() => setShowDataPrev(true)}
                   />
@@ -871,7 +935,10 @@ IProps) {
                     </ItemNext>
                   )}
 
-                  <IconPlayerSkipForwardFilled
+                  <SVG
+                    width={28}
+                    height={32}
+                    src={SkipIcon}
                     onClick={onNextClick}
                     onMouseEnter={() => setShowDataNext(true)}
                   />
@@ -883,42 +950,43 @@ IProps) {
                 onMouseLeave={() => setShowReproductionList(false)}
               >
                 {showReproductionList && (
-                  <ItemListReproduction>
-                    <div>
-                      <div className="title">
-                        {t("playlist", { lng: playerLanguage })}
-                      </div>
-                      <div
+                  <ItemListReproduction primaryColor={primaryColor}>
+                    <div className="list-reproduction" ref={listReproduction}>
+                      {/* <div
                         ref={listReproduction}
                         className="list-list-reproduction scroll-clean-player"
-                      >
-                        {reprodutionList.map((item, index) => (
-                          <div
-                            className={`item-list-reproduction ${
-                              item.playing && "selected"
-                            }`}
-                            onClick={() =>
-                              onClickItemListReproduction &&
-                              onClickItemListReproduction(item.id, item.playing)
-                            }
-                          >
-                            <div className="bold">
-                              <span style={{ marginRight: 5 }}>
-                                {index + 1}
-                              </span>
-                              {item.nome}
-                            </div>
-
-                            {item.percent && <div className="percent" />}
+                      > */}
+                      {reprodutionList.map((item, index) => (
+                        <div
+                          className={`item-list-reproduction ${
+                            item.playing && "selected"
+                          }`}
+                          onClick={() =>
+                            onClickItemListReproduction &&
+                            onClickItemListReproduction(item.id, item.playing)
+                          }
+                          key={index}
+                        >
+                          <div className="bold">
+                            <span style={{ marginRight: 5 }}>{index + 1}</span>
+                            {item.nome}
                           </div>
-                        ))}
-                      </div>
+
+                          {item.percent && <div className="percent" />}
+                        </div>
+                      ))}
+                      {/* </div> */}
                     </div>
-                    <div className="box-connector" />
+                    {/* <div className="box-connector" /> */}
                   </ItemListReproduction>
                 )}
                 {reprodutionList && reprodutionList.length > 1 && (
-                  <FaClone onMouseEnter={() => setShowReproductionList(true)} />
+                  <SVG
+                    src={PlayListIcon}
+                    width={28}
+                    height={32}
+                    onMouseEnter={() => setShowReproductionList(true)}
+                  />
                 )}
               </div>
 
@@ -937,6 +1005,7 @@ IProps) {
                                 setShowQuality(false);
                                 onChangeQuality(item.id);
                               }}
+                              key={item.id}
                             >
                               {item.prefix && <span>HD</span>}
 
@@ -949,13 +1018,21 @@ IProps) {
                     </ItemListQuality>
                   )}
 
-                  <FaCog onMouseEnter={() => setShowQuality(true)} />
+                  <SVG
+                    src={SettingsIcon}
+                    width={28}
+                    height={32}
+                    onMouseEnter={() => setShowQuality(true)}
+                  />
                 </div>
               )}
 
               <div className="item-control">
-                {fullScreen === false && <FaExpand onClick={enterFullScreen} />}
-                {fullScreen === true && <FaCompress onClick={exitFullScreen} />}
+                {fullScreen === false ? (
+                  <FaExpand onClick={fullScreenToggle} />
+                ) : (
+                  <FaCompress onClick={fullScreenToggle} />
+                )}
               </div>
             </div>
           </div>
