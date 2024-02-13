@@ -17,13 +17,14 @@ const toUpOpacity = keyframes`
   }
 `;
 
-export interface IContainerProps {
+export interface IWrapperProps {
   fullPlayer: boolean;
   hideVideo: boolean;
   fontFamily: string;
+  pip: boolean;
 }
 
-export const Container = styled.div<IContainerProps>`
+export const Wrapper = styled.div<IWrapperProps>`
   text-align: left;
 
   & > * {
@@ -47,7 +48,7 @@ export const Container = styled.div<IContainerProps>`
     max-height: 100% !important;
     width: 100% !important;
     max-width: 100% !important;
-    cursor: none;
+    cursor: ${(props) => (props.pip ? "auto" : "none")};
     opacity: ${(props) => (props.hideVideo ? 0 : 1)};
 
     &::cue {
@@ -177,12 +178,16 @@ export const Controlls = styled.div<IControlsProps>`
 
     div {
       display: flex;
+      gap: 16px;
       justify-items: center;
+      align-items: center;
+      &.end {
+        gap: 24px;
+      }
     }
 
     .item-control {
       position: relative;
-      margin: auto 15px;
       &.video-time {
         font-size: 16px;
         font-weight: 400;
@@ -208,12 +213,16 @@ export const Controlls = styled.div<IControlsProps>`
 
     svg {
       cursor: pointer;
-      width: 30px;
-      height: 29.23px;
       transition: all 0.4s ease;
       &:hover {
         fill: ${(props) => props.primaryColor};
-        color: ${(props) => props.primaryColor};
+      }
+    }
+    .play-pause-button {
+      svg {
+        fill: #fff;
+        width: 50px;
+        height: 50px;
       }
     }
   }
@@ -376,6 +385,28 @@ export const VideoPreLoading = styled.div<IVideoPreLoadingProps>`
       font-size: 1.5em;
       margin: 20px;
     }
+  }
+`;
+export const IconOnPress = styled.div`
+  position: absolute;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  /* transform: translate(50%, 50%) !important; */
+  padding: 30px;
+  transition: all 0.5s ease;
+  z-index: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  .icon-on_press_wrapper {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.15);
+    display: flex;
+    justify-content: center;
+    align-items: center;
   }
 `;
 
@@ -566,6 +597,7 @@ export const ItemPlaybackRate = styled(ItemControllBar)<{
   border-radius: 16px;
   background: rgb(20, 20, 20);
   .playback-rates {
+    width: 100%;
     height: 90%;
     margin-top: 10%;
     display: flex;
@@ -596,6 +628,7 @@ export const ItemPlaybackRate = styled(ItemControllBar)<{
     }
 
     .item {
+      width: 100%;
       display: flex;
       flex-direction: row;
       align-items: center;
@@ -670,13 +703,15 @@ export const ItemListReproduction = styled(ItemControllBar)<{
   cursor: pointer;
   font-weight: bold;
   max-width: 304px;
-  max-height: 240px;
+  max-height: 361px;
   display: flex;
   border-radius: 16px;
   background: rgb(20, 20, 20);
   .list-reproduction {
+    width: 100%;
     height: 90%;
-    margin-top: 10%;
+    margin-top: 5%;
+    margin-bottom: 5%;
     display: flex;
     flex-direction: column;
     overflow-y: scroll;
@@ -705,6 +740,7 @@ export const ItemListReproduction = styled(ItemControllBar)<{
     }
 
     .item-list-reproduction {
+      width: 100%;
       display: flex;
       flex-direction: row;
       align-items: center;
@@ -713,12 +749,12 @@ export const ItemListReproduction = styled(ItemControllBar)<{
       cursor: pointer;
       transition: all 0.4s ease;
       height: 30px;
-      border-bottom: 1px solid rgb(44, 45, 53);
+      border-bottom: 1px solid #2c2d35;
       &:last-child {
         border-bottom: 0;
       }
       &:hover {
-        background: rgb(44, 45, 53);
+        background: #2c2d35;
       }
       .bold {
         width: 64px;
@@ -729,7 +765,7 @@ export const ItemListReproduction = styled(ItemControllBar)<{
       }
     }
     .selected {
-      background-color: red;
+      background-color: #2c2d35;
     }
 
     svg {
@@ -743,41 +779,84 @@ export const ItemListReproduction = styled(ItemControllBar)<{
   }
 `;
 
-export const ItemListQuality = styled(ItemControllBar)`
-  max-width: 200px;
-  min-width: 200px;
+export const ItemListQuality = styled(ItemControllBar)<{
+  primaryColor: string;
+}>`
+  max-width: 304px;
+  max-height: 240px;
 
-  & > div:first-child {
-    font-size: 14px;
-    background: #222222;
-    border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+  display: flex;
+  border-radius: 16px;
+  background: rgb(20, 20, 20);
+  .item-list-quality {
+    width: 100%;
+    height: 90%;
+    margin-top: 5%;
+    margin-bottom: 5%;
     display: flex;
     flex-direction: column;
-    overflow: hidden;
+    overflow-y: scroll;
 
-    div {
-      display: flex;
-      align-items: center;
-      padding: 10px;
-      cursor: pointer;
-
-      &:hover {
-        background: #333;
-      }
+    /* Ширина и цвет полосы прокрутки */
+    &::-webkit-scrollbar {
+      width: 8px;
+      border-radius: 8px;
+      background: #2c2d35;
+      max-height: 50px;
+      height: 50px;
+    }
+    &::-webkit-scrollbar-track {
     }
 
-    span {
-      margin-right: 5px;
+    /* Цвет и стиль полосы прокрутки */
+    &::-webkit-scrollbar-thumb {
+      border-radius: 8px;
+      background: ${(props) => props.primaryColor};
+    }
 
-      &:nth-child(1) {
-        font-weight: bold;
+    .item-quality {
+      width: 100%;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      font-size: 14px;
+      padding: 10px 0;
+      cursor: pointer;
+      transition: all 0.4s ease;
+      height: 30px;
+      border-bottom: 1px solid #2c2d35;
+      &:last-child {
+        border-bottom: 0;
       }
+      &:hover {
+        background: #2c2d35;
+      }
+      .check {
+        width: 30px;
+        padding: 0;
+      }
+      .title {
+        width: calc(100% - 30px);
+        margin-left: 30px;
+        font-size: 20px;
+        font-weight: bold;
+        padding: 0 32px 0 0;
+        margin: 0;
+      }
+    }
+    .selected {
+      background-color: #2c2d35;
     }
 
     svg {
-      color: #f78b28;
-      font-size: 2em;
-      margin-left: auto;
+      font-size: 14px !important;
+      margin-right: 5px;
+    }
+
+    .bold {
+      font-weight: bold;
     }
   }
 `;

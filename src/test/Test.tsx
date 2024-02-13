@@ -10,7 +10,7 @@ import {
   FaExpand,
   FaCompress,
 } from "react-icons/fa";
-import { FiCheck, FiX } from "react-icons/fi";
+import { FiX } from "react-icons/fi";
 
 import Prev10Icon from "public/icons/rotate-left_10.svg";
 import Next10Icon from "public/icons/rotate-right_10.svg";
@@ -20,11 +20,11 @@ import VolumeIcon from "public/icons/volume.svg";
 import SkipIcon from "public/icons/skip.svg";
 import BackIcon from "public/icons/back.svg";
 import ArrowLeftIcon from "public/icons/arrow-left.svg";
-import MessageIcon from "public/icons/message.svg";
+// import MessageIcon from "public/icons/message.svg";
+// import FullScreenIcon from "public/icons/fullscreen.svg";
+// import SelfSizeIcon from "public/icons/resume.svg";
 import ResumeIcon from "public/icons/resume.svg";
 import PlayIcon from "public/icons/play.svg";
-import FullScreenIcon from "public/icons/fullscreen.svg";
-import SelfSizeIcon from "public/icons/resume.svg";
 import CheckIcon from "public/icons/check.svg";
 
 import SVG from "react-inlinesvg";
@@ -40,12 +40,19 @@ import {
   ItemNext,
   ItemListReproduction,
   ItemListQuality,
+  IconOnPress,
+  Wrapper,
 } from "./styles";
 import translations from "../../public/locales";
 
 import { useFullscreen } from "../hooks/useFullScreen";
 import { useMergedRef } from "../hooks/useMergedRef";
 import { useHotkeys } from "../hooks/useHotKeys/useHotKeys";
+import PlayPauseAnimateButton, {
+  YSPlayPauseButton,
+} from "@/components/PlayPauseAnimateButton/PlayPauseAnimateButton";
+import { Transition } from "@/components/Transition";
+import { useDelayedHover } from "@/hooks/useDelayHover";
 
 i18n.use(initReactI18next).init({
   resources: translations,
@@ -166,7 +173,7 @@ IProps) {
   const timerBuffer = useRef<null | any>(null);
   const playerElement = useRef<null | HTMLDivElement>(null);
   const listReproduction = useRef<null | HTMLDivElement>(null);
-
+  const PlayPauseButtonRef = useRef<YSPlayPauseButton>(null);
   // Estados
   const {
     toggle: fullScreenToggle,
@@ -198,19 +205,68 @@ IProps) {
   const [showDataPrev, setShowDataPrev] = useState(false);
   const [showPlaybackRate, setShowPlaybackRate] = useState(false);
   const [showReproductionList, setShowReproductionList] = useState(false);
+  const [keyPressIcon, setKeyPressIcon] = useState<null | string>(null);
 
   // i18n hook
   const { t } = useTranslation();
 
   // other hooks
+  const { openDropdown: spaceHotKeyOpen, closeDropdown: spaceHotKeyClose } =
+    useDelayedHover({
+      open: () => {
+        stopVideo();
+        setKeyPressIcon(() => (playing ? ResumeIcon : PlayIcon));
+      },
+      close: () => setKeyPressIcon(() => null),
+      openDelay: 0,
+      closeDelay: 1000,
+    });
+  const {
+    openDropdown: ArrowLeftHotKeyOpen,
+    closeDropdown: ArrowLeftHotKeyClose,
+  } = useDelayedHover({
+    open: () => {
+      previousSeconds(10);
+      setKeyPressIcon(() => Prev10Icon);
+    },
+    close: () => setKeyPressIcon(() => null),
+    openDelay: 0,
+    closeDelay: 1000,
+  });
+  const {
+    openDropdown: ArrowRightHotKeyOpen,
+    closeDropdown: ArrowRightHotKeyClose,
+  } = useDelayedHover({
+    open: () => {
+      nextSeconds(10);
+      setKeyPressIcon(() => Next10Icon);
+    },
+    close: () => setKeyPressIcon(() => null),
+    openDelay: 0,
+    closeDelay: 1000,
+  });
+
   const mergedPlayerRef = useMergedRef(playerElement, fullScreenRef);
   useHotkeys([
-    ["Space", stopVideo],
-    ["ArrowLeft", () => previousSeconds(10)],
+    [
+      "Space",
+      () => {
+        spaceHotKeyOpen();
+        spaceHotKeyClose();
+      },
+    ],
+    [
+      "ArrowLeft",
+      () => {
+        ArrowLeftHotKeyOpen();
+        ArrowLeftHotKeyClose();
+      },
+    ],
     [
       "ArrowRight",
       () => {
-        nextSeconds(10);
+        ArrowRightHotKeyOpen();
+        ArrowRightHotKeyClose();
       },
     ],
   ]);
@@ -243,9 +299,6 @@ IProps) {
   const timeUpdate = (e: SyntheticEvent<HTMLVideoElement, Event>) => {
     setShowInfo(false);
     setEnd(false);
-    if (playing) {
-      setPlaying(true);
-    }
 
     if (waitingBuffer) {
       setWaitingBuffer(false);
@@ -301,17 +354,21 @@ IProps) {
     }
   };
 
-  const play = () => {
-    setPlaying(() => !playing);
-    if (videoComponent.current) {
-      if (videoComponent.current.paused) {
-        videoComponent.current.play();
-        return;
-      }
+  // const play = () => {
+  //   if (videoComponent.current) {
+  //     if (videoComponent.current.paused) {
+  //       videoComponent.current.play();
+  //       console.log(`play : `, playing);
+  //       setPlaying(true);
+  //       return;
+  //     }
 
-      videoComponent.current.pause();
-    }
-  };
+  //     console.log(`pause : `, playing);
+  //     setPlaying(false);
+  //     videoComponent.current.pause();
+  //     return;
+  //   }
+  // };
 
   const onEndedFunction = () => {
     if (videoComponent.current) {
@@ -451,16 +508,15 @@ IProps) {
   };
 
   function stopVideo() {
+    hoverScreen();
     if (videoComponent.current) {
       if (videoComponent.current.paused) {
         videoComponent.current.play();
-        setPlaying(true);
-        hoverScreen();
-      } else {
-        videoComponent.current.pause();
-        setPlaying(false);
-        hoverScreen();
+        setPlaying(() => true);
+        return;
       }
+      videoComponent.current.pause();
+      setPlaying(() => false);
     }
   }
 
@@ -494,10 +550,12 @@ IProps) {
     const videoElement = videoComponent?.current;
 
     const handleEnterPip = () => {
+      setPlaying(() => true);
       setIsPip(true);
     };
 
     const handleLeavePip = () => {
+      setPlaying(() => false);
       setIsPip(false);
     };
 
@@ -505,8 +563,14 @@ IProps) {
     videoElement?.addEventListener("leavepictureinpicture", handleLeavePip);
 
     return () => {
-      videoElement.removeEventListener("enterpictureinpicture", handleEnterPip);
-      videoElement.removeEventListener("leavepictureinpicture", handleLeavePip);
+      videoElement?.removeEventListener(
+        "enterpictureinpicture",
+        handleEnterPip
+      );
+      videoElement?.removeEventListener(
+        "leavepictureinpicture",
+        handleLeavePip
+      );
     };
   }, []);
 
@@ -601,12 +665,19 @@ IProps) {
                   <div className="links-error">
                     {qualities.map((item) => (
                       <div
+                        onClick={() => {
+                          setShowQuality(false);
+                          onChangeQuality(item.id);
+                        }}
                         key={item.id}
-                        onClick={() => onChangeQuality(item.id)}
+                        className="item-quality"
                       >
-                        {item.prefix && <span>HD</span>}
-                        <span>{item.nome}</span>
-                        {item.playing && <FiX />}
+                        <span className="check">
+                          {item.playing ? (
+                            <SVG src={CheckIcon} width={35} height={30}></SVG>
+                          ) : null}
+                        </span>
+                        <span className="title">{item.nome}</span>
                       </div>
                     ))}
                   </div>
@@ -618,6 +689,19 @@ IProps) {
       </VideoPreLoading>
     );
   }
+  // function RenderIconOnPress(props?: { Icon?: any }) {
+  //   return (
+  //     <Transition
+  //       mounted={!!props?.Icon}
+  //       keepMounted={false}
+  //       duration={50}
+  //       exitDuration={250}
+  //       transition={"fade"}
+  //     >
+  //       {(styles) => <IconOnPress style={styles}> {props?.Icon}</IconOnPress>}
+  //     </Transition>
+  //   );
+  // }
 
   const handleTogglePip = async () => {
     try {
@@ -642,13 +726,14 @@ IProps) {
     }
   };
   return (
-    <Container
+    <Wrapper
       onMouseMove={hoverScreen}
       ref={mergedPlayerRef}
       onDoubleClick={chooseFullScreen}
       fullPlayer={fullPlayer}
       hideVideo={!!error}
       fontFamily={fontFamily}
+      pip={isPip}
     >
       {(videoReady === false || (waitingBuffer === true && playing === true)) &&
         !error &&
@@ -658,7 +743,27 @@ IProps) {
       {(!!overlayEnabled || isPip) && renderInfoVideo()}
 
       {renderCloseVideo()}
-
+      {/* <RenderIconOnPress Icon={keyPressIcon} /> */}
+      <IconOnPress>
+        <Transition
+          mounted={!!keyPressIcon}
+          keepMounted={false}
+          duration={100}
+          exitDuration={100}
+          transition={"fade"}
+        >
+          {(styles) => (
+            <div className="icon-on_press_wrapper" style={styles}>
+              <SVG
+                src={keyPressIcon ?? ""}
+                color="#fff"
+                width={40}
+                height={40}
+              />
+            </div>
+          )}
+        </Transition>
+      </IconOnPress>
       <video
         ref={videoComponent}
         controls={false}
@@ -737,11 +842,20 @@ IProps) {
           <div className="controlls">
             <div className="start">
               <div className="item-control">
-                <SVG
-                  width={28}
-                  height={30}
-                  src={playing ? ResumeIcon : PlayIcon}
-                  onClick={play}
+                <PlayPauseAnimateButton
+                  className="play-pause-button"
+                  ref={PlayPauseButtonRef}
+                  state={playing ? "playing" : "paused"}
+                  onToggle={(e) => {
+                    if (e === "playing") {
+                      setPlaying(() => true);
+                      videoComponent?.current?.play();
+                      return;
+                    }
+                    videoComponent?.current?.pause();
+                    setPlaying(() => false);
+                    return;
+                  }}
                 />
               </div>
 
@@ -853,8 +967,8 @@ IProps) {
                               {+item === +playbackRate && (
                                 <>
                                   <SVG
-                                    width={10}
-                                    height={10}
+                                    width={35}
+                                    height={30}
                                     src={CheckIcon}
                                     fill="transparent"
                                     stroke="#fff"
@@ -906,8 +1020,8 @@ IProps) {
 
                   <SVG
                     src={BackIcon}
-                    width={28}
-                    height={32}
+                    width={20}
+                    height={20}
                     onClick={onNextClick}
                     onMouseEnter={() => setShowDataPrev(true)}
                   />
@@ -936,8 +1050,8 @@ IProps) {
                   )}
 
                   <SVG
-                    width={28}
-                    height={32}
+                    width={20}
+                    height={20}
                     src={SkipIcon}
                     onClick={onNextClick}
                     onMouseEnter={() => setShowDataNext(true)}
@@ -952,10 +1066,6 @@ IProps) {
                 {showReproductionList && (
                   <ItemListReproduction primaryColor={primaryColor}>
                     <div className="list-reproduction" ref={listReproduction}>
-                      {/* <div
-                        ref={listReproduction}
-                        className="list-list-reproduction scroll-clean-player"
-                      > */}
                       {reprodutionList.map((item, index) => (
                         <div
                           className={`item-list-reproduction ${
@@ -975,16 +1085,14 @@ IProps) {
                           {item.percent && <div className="percent" />}
                         </div>
                       ))}
-                      {/* </div> */}
                     </div>
-                    {/* <div className="box-connector" /> */}
                   </ItemListReproduction>
                 )}
                 {reprodutionList && reprodutionList.length > 1 && (
                   <SVG
                     src={PlayListIcon}
-                    width={28}
-                    height={32}
+                    width={20}
+                    height={20}
                     onMouseEnter={() => setShowReproductionList(true)}
                   />
                 )}
@@ -996,8 +1104,8 @@ IProps) {
                   onMouseLeave={() => setShowQuality(false)}
                 >
                   {showQuality === true && (
-                    <ItemListQuality>
-                      <div>
+                    <ItemListQuality primaryColor={primaryColor}>
+                      <div className="item-list-quality">
                         {qualities &&
                           qualities.map((item) => (
                             <div
@@ -1006,22 +1114,28 @@ IProps) {
                                 onChangeQuality(item.id);
                               }}
                               key={item.id}
+                              className="item-quality"
                             >
-                              {item.prefix && <span>HD</span>}
-
-                              <span>{item.nome}</span>
-                              {item.playing && <FiCheck />}
+                              <span className="check">
+                                {item.playing ? (
+                                  <SVG
+                                    src={CheckIcon}
+                                    width={35}
+                                    height={30}
+                                  ></SVG>
+                                ) : null}
+                              </span>
+                              <span className="title">{item.nome}</span>
                             </div>
                           ))}
                       </div>
-                      <div className="box-connector" />
                     </ItemListQuality>
                   )}
 
                   <SVG
                     src={SettingsIcon}
-                    width={28}
-                    height={32}
+                    width={20}
+                    height={20}
                     onMouseEnter={() => setShowQuality(true)}
                   />
                 </div>
@@ -1038,6 +1152,6 @@ IProps) {
           </div>
         )}
       </Controlls>
-    </Container>
+    </Wrapper>
   );
 }

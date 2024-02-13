@@ -40,8 +40,8 @@ function App() {
         }}
         onNextClick={() => console.log("next")}
         qualities={[
-          { id: "1234", nome: "nmadr", playing: true, prefix: "240p" },
-          { id: "12345", nome: "nmadr", playing: false, prefix: "480p" },
+          { id: "1234", nome: "280p", playing: true, prefix: "240p" },
+          { id: "12345", nome: "480p", playing: false, prefix: "480p" },
         ]}
         onChangeQuality={(e) => console.log(e)}
         onPrevClick={() => console.log("prev")}
