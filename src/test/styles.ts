@@ -17,22 +17,6 @@ const toUpOpacity = keyframes`
   }
 `;
 
-const toScaleOpacity = keyframes`
-  0% {
-    opacity: 0;
-    transform: scale(0.7);
-  }
-
-  30% {
-    opacity: 1;
-  }
-
-  100% {
-    opacity: 0;
-    transform: scale(1.2);
-  }
-`;
-
 export interface IWrapperProps {
   fullPlayer: boolean;
   hideVideo: boolean;
@@ -425,7 +409,7 @@ export const VideoPreLoading = styled.div<IVideoPreLoadingProps>`
     }
   }
 `;
-export const IconOnPress = styled.div<{ mounted: boolean }>`
+export const IconOnPress = styled.div`
   top: 0;
   width: 100%;
   height: 100%;
@@ -435,12 +419,6 @@ export const IconOnPress = styled.div<{ mounted: boolean }>`
   display: flex;
   justify-content: center;
   align-items: center;
-  ${(props) =>
-    props.mounted &&
-    css`
-      animation: 3s linear ${toScaleOpacity};
-      animation-duration: 100;
-    `}
   .icon-on_press_wrapper {
     z-index: 10;
     width: 80px;
