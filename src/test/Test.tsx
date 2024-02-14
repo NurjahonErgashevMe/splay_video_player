@@ -32,7 +32,6 @@ import {
   Loading,
   StandyByInfo,
   VideoPreLoading,
-  Container,
   Controlls,
   VolumeControll,
   ItemPlaybackRate,
@@ -46,7 +45,7 @@ import {
 import translations from "../../public/locales";
 
 import { useFullscreen } from "../hooks/useFullScreen";
-import { useMergedRef } from "../hooks/useMergedRef";
+// import { useMergedRef } from "../hooks/useMergedRef";
 import { useHotkeys } from "../hooks/useHotKeys/useHotKeys";
 import PlayPauseAnimateButton, {
   YSPlayPauseButton,
@@ -91,6 +90,8 @@ export interface IItemReproduction {
    */
   nome?: string;
 }
+
+const PLAY_ICON_URL: string = "/public/icons/play.svg";
 
 export interface IProps {
   title?: string | boolean;
@@ -178,7 +179,7 @@ IProps) {
   const {
     toggle: fullScreenToggle,
     fullscreen: fullScreen,
-    ref: fullScreenRef,
+    // ref: fullScreenRef,
   } = useFullscreen();
   const [videoReady, setVideoReady] = useState(false);
   const [playing, setPlaying] = useState(true);
@@ -206,8 +207,7 @@ IProps) {
   const [showPlaybackRate, setShowPlaybackRate] = useState(false);
   const [showReproductionList, setShowReproductionList] = useState(false);
   const [keyPressIcon, setKeyPressIcon] = useState<null | string>(null);
-
-  // i18n hook
+   // i18n hook
   const { t } = useTranslation();
 
   // other hooks
@@ -217,10 +217,11 @@ IProps) {
         stopVideo();
         setKeyPressIcon(() => (playing ? ResumeIcon : PlayIcon));
       },
-      close: () => setKeyPressIcon(() => null),
+      close: () =>
+        setKeyPressIcon((prev) => (prev === PLAY_ICON_URL ? prev : null)),
       openDelay: 0,
       closeDelay: 1000,
-    });
+    } );
   const {
     openDropdown: ArrowLeftHotKeyOpen,
     closeDropdown: ArrowLeftHotKeyClose,
@@ -229,7 +230,9 @@ IProps) {
       previousSeconds(10);
       setKeyPressIcon(() => Prev10Icon);
     },
-    close: () => setKeyPressIcon(() => null),
+    close: () => {
+      setKeyPressIcon(null);
+    },
     openDelay: 0,
     closeDelay: 1000,
   });
@@ -241,32 +244,34 @@ IProps) {
       nextSeconds(10);
       setKeyPressIcon(() => Next10Icon);
     },
-    close: () => setKeyPressIcon(() => null),
+    close: () => {
+      setKeyPressIcon(null);
+    },
     openDelay: 0,
     closeDelay: 1000,
   });
 
-  const mergedPlayerRef = useMergedRef(playerElement, fullScreenRef);
+  // const mergedPlayerRef = useMergedRef(playerElement, fullScreenRef);
   useHotkeys([
     [
       "Space",
       () => {
         spaceHotKeyOpen();
-        spaceHotKeyClose();
+        // spaceHotKeyClose();
       },
     ],
     [
       "ArrowLeft",
       () => {
         ArrowLeftHotKeyOpen();
-        ArrowLeftHotKeyClose();
+        // ArrowLeftHotKeyClose();
       },
-    ],
+    ], 
     [
       "ArrowRight",
       () => {
         ArrowRightHotKeyOpen();
-        ArrowRightHotKeyClose();
+        // ArrowRightHotKeyClose();
       },
     ],
   ]);
@@ -358,7 +363,6 @@ IProps) {
   //   if (videoComponent.current) {
   //     if (videoComponent.current.paused) {
   //       videoComponent.current.play();
-  //       console.log(`play : `, playing);
   //       setPlaying(true);
   //       return;
   //     }
@@ -728,7 +732,7 @@ IProps) {
   return (
     <Wrapper
       onMouseMove={hoverScreen}
-      ref={mergedPlayerRef}
+      // ref={mergedPlayerRef}
       onDoubleClick={chooseFullScreen}
       fullPlayer={fullPlayer}
       hideVideo={!!error}
@@ -744,26 +748,6 @@ IProps) {
 
       {renderCloseVideo()}
       {/* <RenderIconOnPress Icon={keyPressIcon} /> */}
-      <IconOnPress>
-        <Transition
-          mounted={!!keyPressIcon}
-          keepMounted={false}
-          duration={100}
-          exitDuration={100}
-          transition={"fade"}
-        >
-          {(styles) => (
-            <div className="icon-on_press_wrapper" style={styles}>
-              <SVG
-                src={keyPressIcon ?? ""}
-                color="#fff"
-                width={40}
-                height={40}
-              />
-            </div>
-          )}
-        </Transition>
-      </IconOnPress>
       <video
         ref={videoComponent}
         controls={false}
@@ -783,14 +767,58 @@ IProps) {
       /> */}
 
       <Controlls
-        show={
-          !isPip ||
-          (showControls === true && videoReady === true && error === false)
-        }
+        show={showControls === true && videoReady === true && error === false}
         primaryColor={primaryColor}
         progressVideo={(progress * 100) / duration}
         pip={isPip}
       >
+        <div className="interactivities">
+          <div
+            className="interactivities__back"
+            onDoubleClick={() => {
+              ArrowLeftHotKeyOpen();
+              ArrowLeftHotKeyClose();
+            }}
+          ></div>
+          <IconOnPress
+            onClick={() => {
+              spaceHotKeyOpen();
+              spaceHotKeyClose();
+            }}
+          >
+            <Transition
+              mounted={keyPressIcon === PLAY_ICON_URL ? true : !!keyPressIcon}
+              keepMounted={false}
+              duration={50}
+              exitDuration={200}
+              transition={"fade"}
+            >
+              {(styles) => {
+                return (
+                  <div className="icon-on_press_wrapper" style={styles}>
+                    <SVG
+                      src={keyPressIcon ?? ""}
+                      color="#fff"
+                      width={40}
+                      height={40}
+                      style={{
+                        cursor:
+                          keyPressIcon === PLAY_ICON_URL ? "pointer" : "auto",
+                      }}
+                    />
+                  </div>
+                );
+              }}
+            </Transition>
+          </IconOnPress>
+          <div
+            className="interactivities__skip"
+            onDoubleClick={() => {
+              ArrowRightHotKeyOpen();
+              ArrowRightHotKeyClose();
+            }}
+          ></div>
+        </div>
         {backButton && (
           <div className="back">
             <div
@@ -808,6 +836,7 @@ IProps) {
             </div>
           </div>
         )}
+        <div className="top"></div>
 
         {showControlVolume !== true &&
           showQuality !== true &&
@@ -848,10 +877,12 @@ IProps) {
                   state={playing ? "playing" : "paused"}
                   onToggle={(e) => {
                     if (e === "playing") {
+                      setKeyPressIcon(() => ResumeIcon);
                       setPlaying(() => true);
                       videoComponent?.current?.play();
                       return;
                     }
+                    setKeyPressIcon(() => PlayIcon);
                     videoComponent?.current?.pause();
                     setPlaying(() => false);
                     return;

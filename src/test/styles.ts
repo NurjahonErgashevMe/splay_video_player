@@ -17,6 +17,22 @@ const toUpOpacity = keyframes`
   }
 `;
 
+const toScaleOpacity = keyframes`
+  0% {
+    opacity: 0;
+    transform: scale(0.7);
+  }
+
+  30% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(1.2);
+  }
+`;
+
 export interface IWrapperProps {
   fullPlayer: boolean;
   hideVideo: boolean;
@@ -43,6 +59,7 @@ export const Wrapper = styled.div<IWrapperProps>`
   position: relative;
   background: #000;
   overflow: hidden;
+  max-width: 1920px;
   video {
     height: 100% !important;
     max-height: 100% !important;
@@ -96,6 +113,7 @@ export const Controlls = styled.div<IControlsProps>`
   color: #fff;
   font-size: 1.5em;
   background: rgb(0, 0, 0);
+  z-index: 5;
   background: linear-gradient(
     0deg,
     rgba(0, 0, 0, 1) 0%,
@@ -105,6 +123,26 @@ export const Controlls = styled.div<IControlsProps>`
     rgba(0, 0, 0, 0.7) 80%,
     rgba(0, 0, 0, 1) 100%
   );
+  div {
+    z-index: 20;
+  }
+
+  .interactivities {
+    position: absolute;
+    width: 100%;
+    height: 90%;
+    transform: translate(0, 5%);
+    z-index: 6;
+    top: 0;
+    left: 0;
+    display: flex;
+    justify-content: space-between;
+    &__back,
+    &__skip {
+      width: 30%;
+      height: 100%;
+    }
+  }
 
   .back {
     margin-bottom: auto;
@@ -387,19 +425,24 @@ export const VideoPreLoading = styled.div<IVideoPreLoadingProps>`
     }
   }
 `;
-export const IconOnPress = styled.div`
-  position: absolute;
+export const IconOnPress = styled.div<{ mounted: boolean }>`
   top: 0;
   width: 100%;
   height: 100%;
-  /* transform: translate(50%, 50%) !important; */
   padding: 30px;
   transition: all 0.5s ease;
-  z-index: 0;
+  z-index: 1;
   display: flex;
   justify-content: center;
   align-items: center;
+  ${(props) =>
+    props.mounted &&
+    css`
+      animation: 3s linear ${toScaleOpacity};
+      animation-duration: 100;
+    `}
   .icon-on_press_wrapper {
+    z-index: 10;
     width: 80px;
     height: 80px;
     border-radius: 50%;
