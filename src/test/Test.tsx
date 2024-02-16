@@ -20,13 +20,14 @@ import VolumeIcon from "public/icons/volume.svg";
 import SkipIcon from "public/icons/skip.svg";
 import BackIcon from "public/icons/back.svg";
 import ArrowLeftIcon from "public/icons/arrow-left.svg";
-// import MessageIcon from "public/icons/message.svg";
+import MessageIcon from "public/icons/message.svg";
 // import FullScreenIcon from "public/icons/fullscreen.svg";
+import BigToSmall from "public/icons/bigToSmall.svg";
 // import SelfSizeIcon from "public/icons/resume.svg";
 import ResumeIcon from "public/icons/resume.svg";
 import PlayIcon from "public/icons/play.svg";
 import CheckIcon from "public/icons/check.svg";
-
+// import TriangleIcon from "public/icons/triangle.svg";
 import SVG from "react-inlinesvg";
 import {
   Loading,
@@ -127,7 +128,7 @@ export interface IProps {
   onChangeQuality?: (quality: string | number) => void;
 }
 
-export default function ReactNetflixPlayer({
+function Player({
   title = false,
   subTitle = false,
   titleMedia = false,
@@ -207,7 +208,7 @@ IProps) {
   const [showPlaybackRate, setShowPlaybackRate] = useState(false);
   const [showReproductionList, setShowReproductionList] = useState(false);
   const [keyPressIcon, setKeyPressIcon] = useState<null | string>(null);
-   // i18n hook
+  // i18n hook
   const { t } = useTranslation();
 
   // other hooks
@@ -215,13 +216,13 @@ IProps) {
     useDelayedHover({
       open: () => {
         stopVideo();
-        setKeyPressIcon(() => (playing ? ResumeIcon : PlayIcon));
+        setKeyPressIcon(() => (videoComponent.current?.play ? ResumeIcon : PlayIcon));
       },
       close: () =>
         setKeyPressIcon((prev) => (prev === PLAY_ICON_URL ? prev : null)),
       openDelay: 0,
       closeDelay: 1000,
-    } );
+    });
   const {
     openDropdown: ArrowLeftHotKeyOpen,
     closeDropdown: ArrowLeftHotKeyClose,
@@ -256,22 +257,28 @@ IProps) {
     [
       "Space",
       () => {
+        setShowControls(true);
+        setShowInfo(false);
         spaceHotKeyOpen();
-        // spaceHotKeyClose();
+        spaceHotKeyClose();
       },
     ],
     [
       "ArrowLeft",
       () => {
+        setShowControls(true);
+        setShowInfo(false);
         ArrowLeftHotKeyOpen();
-        // ArrowLeftHotKeyClose();
+        ArrowLeftHotKeyClose();
       },
-    ], 
+    ],
     [
       "ArrowRight",
       () => {
+        setShowControls(true);
+        setShowInfo(false);
         ArrowRightHotKeyOpen();
-        // ArrowRightHotKeyClose();
+        ArrowRightHotKeyClose();
       },
     ],
   ]);
@@ -823,12 +830,16 @@ IProps) {
           <div className="back">
             <div
               onClick={() => {
-                handleTogglePip();
                 backButton();
               }}
               style={{ cursor: "pointer" }}
             >
-              <SVG src={ArrowLeftIcon} width={38} height={38} fill={"#fff"} />
+              <SVG
+                src={ArrowLeftIcon}
+                width={43.75}
+                height={40}
+                fill={"#fff"}
+              />
               <span className="back__text">
                 <h3>{dataPrev?.title}</h3>
                 <p>{dataPrev?.description}</p>
@@ -836,7 +847,19 @@ IProps) {
             </div>
           </div>
         )}
-        <div className="top"></div>
+        <div className="top">
+          <div
+            className="item-control pip-toggle-wrapper"
+            onClick={() => {
+              handleTogglePip();
+            }}
+          >
+            <SVG src={BigToSmall} width={30} height={22.5} />
+          </div>
+          <div className="item-control message-problem">
+            <SVG src={MessageIcon} width={30} height={28} />
+          </div>
+        </div>
 
         {showControlVolume !== true &&
           showQuality !== true &&
@@ -869,6 +892,7 @@ IProps) {
 
         {videoReady === true && (
           <div className="controlls">
+            {/* <div className="controlls-container"> */}
             <div className="start">
               <div className="item-control">
                 <PlayPauseAnimateButton
@@ -971,7 +995,7 @@ IProps) {
                 </div>
               )}
               <span className="item-control video-time">
-                {secondsToHms(progress)} : {secondsToHms(duration)}
+                {secondsToHms(progress)} / {secondsToHms(duration)}
               </span>
               <div className="item-control info-video">
                 <span className="info-first">{titleMedia}</span>
@@ -990,28 +1014,25 @@ IProps) {
                       <div className="playback-rates">
                         {playbackRateOptions.map((item, index) => (
                           <div
-                            className="item"
+                            className="playback-rates__item"
                             onClick={() => onChangePlayBackRate(item)}
                             key={index}
                           >
-                            <div className="check">
+                            <div className="playback-rates__item__check">
                               {+item === +playbackRate && (
-                                <>
-                                  <SVG
-                                    width={35}
-                                    height={30}
-                                    src={CheckIcon}
-                                    fill="transparent"
-                                    stroke="#fff"
-                                  ></SVG>
-                                </>
+                                <SVG
+                                  width={24}
+                                  height={24}
+                                  src={CheckIcon}
+                                  fill="transparent"
+                                  stroke="#fff"
+                                ></SVG>
                               )}
                             </div>
-                            <div className="bold">{`${item}x`}</div>
+                            <div className="playback-rates__item__bold">{`${item}x`}</div>
                           </div>
                         ))}
                       </div>
-                      <div className="box-connector" />
                     </ItemPlaybackRate>
                   )}
 
@@ -1180,9 +1201,12 @@ IProps) {
                 )}
               </div>
             </div>
+            {/* </div> */}
           </div>
         )}
       </Controlls>
     </Wrapper>
   );
 }
+
+export default Player

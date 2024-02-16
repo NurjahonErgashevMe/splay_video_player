@@ -83,7 +83,7 @@ export interface IControlsProps {
 
 export const Controlls = styled.div<IControlsProps>`
   opacity: ${(props) => (props.show ? 1 : 0)};
-  transform: ${(props) => (props.show ? "scale(1)" : "scale(1.2)")};
+  /* transform: ${(props) => (props.show ? "scale(1)" : "scale(1.2)")}; */
   position: absolute;
   top: 0;
   width: 100%;
@@ -96,17 +96,8 @@ export const Controlls = styled.div<IControlsProps>`
   padding: 20px 40px;
   color: #fff;
   font-size: 1.5em;
-  background: rgb(0, 0, 0);
   z-index: 5;
-  background: linear-gradient(
-    0deg,
-    rgba(0, 0, 0, 1) 0%,
-    rgba(0, 0, 0, 0.7) 20%,
-    rgba(0, 0, 0, 0) 40%,
-    rgba(0, 0, 0, 0) 60%,
-    rgba(0, 0, 0, 0.7) 80%,
-    rgba(0, 0, 0, 1) 100%
-  );
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0), rgb(0, 0, 0) 100%);
   div {
     z-index: 20;
   }
@@ -176,6 +167,23 @@ export const Controlls = styled.div<IControlsProps>`
     }
   }
 
+  .top {
+    position: absolute;
+    top: 40px;
+    right: 40px;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    .item-control {
+      cursor: pointer;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+  }
+
   .line-reproduction {
     display: flex;
     margin-bottom: 10px;
@@ -193,24 +201,30 @@ export const Controlls = styled.div<IControlsProps>`
     margin: 20px 0;
     display: flex;
     justify-items: center;
-
     .end {
       margin-left: auto;
     }
-
-    div {
+    .end,
+    .start {
       display: flex;
       gap: 16px;
       justify-items: center;
       align-items: center;
       &.end {
-        gap: 24px;
+        gap: 20px;
       }
     }
 
     .item-control {
+      width: 40px;
+      height: 40px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
       position: relative;
+      padding: 0;
       &.video-time {
+        width: auto;
         font-size: 16px;
         font-weight: 400;
         line-height: 24px;
@@ -617,6 +631,7 @@ export const ItemPlaybackRate = styled(ItemControllBar)<{
   display: flex;
   border-radius: 16px;
   background: rgb(20, 20, 20);
+  margin-bottom: 13px;
   .playback-rates {
     width: 100%;
     height: 90%;
@@ -624,7 +639,8 @@ export const ItemPlaybackRate = styled(ItemControllBar)<{
     display: flex;
     flex-direction: column;
     overflow-y: scroll;
-    /* padding: 8px 0; */
+    overflow-x: hidden;
+    position: relative;
     .title {
       font-size: 20px;
       font-weight: bold;
@@ -648,29 +664,47 @@ export const ItemPlaybackRate = styled(ItemControllBar)<{
       background: ${(props) => props.primaryColor};
     }
 
-    .item {
+    &__item {
       width: 100%;
       display: flex;
-      flex-direction: row;
       align-items: center;
+      gap: 8px;
       font-size: 14px;
-      padding: 10px 0;
+      padding: 10px;
       cursor: pointer;
       transition: all 0.4s ease;
-      height: 30px;
       border-bottom: 1px solid rgb(44, 45, 53);
+      z-index: 2;
       &:last-child {
         border-bottom: 0;
       }
       &:hover {
         background: rgb(44, 45, 53);
       }
-      .bold {
-        width: 64px;
+      &__bold {
+        width: 100%;
+        font-size: 20px;
+        font-weight: 600;
+        line-height: 32px;
+        letter-spacing: 0%;
       }
-      .check {
-        width: 30px;
+      &__check {
+        width: 24px;
+        height: 24px;
         padding: 0;
+      }
+    }
+    &__box-connector {
+      width: 100%;
+      height: 20px;
+      position: absolute;
+      display: flex;
+      justify-content: end;
+      bottom: -10px;
+      z-index: 1;
+      &__trangle-icon {
+        margin-left: auto;
+        padding-right: 20px;
       }
     }
 

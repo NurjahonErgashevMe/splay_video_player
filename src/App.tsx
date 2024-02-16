@@ -1,11 +1,13 @@
 import Video from "../public/videos/video.mp4";
-import ReactNetflixPlayer from "./test/Test";
+// import MultiLevelMenu from "./components/MultiLevelMenu/MultiLevelMenu";
+import Player from "./test/Test";
 
 function App() {
   return (
     <div>
       <h1>HELLO WORLD IT IS PLAYER ЖЕ ЕСТЬ </h1>
-      <ReactNetflixPlayer
+      {/* <MultiLevelMenu /> */}
+      <Player
         reprodutionList={[
           { id: "213243", name: "Transformers", playing: false, percent: 1110 },
           { id: "12321", name: "Yigit so'zi", playing: false, percent: 2220 },
@@ -25,7 +27,7 @@ function App() {
           { id: "12321", name: "Yigit so'zi", playing: false, percent: 2220 },
           { id: "12321", name: "Yigit so'zi", playing: false, percent: 2220 },
         ]}
-        src={Video }
+        src={Video}
         playerLanguage="ru"
         backButton={() => console.log("back")}
         title="Уэнсдэй"
@@ -45,7 +47,7 @@ function App() {
         ]}
         onChangeQuality={(e) => console.log(e)}
         onPrevClick={() => console.log("prev")}
-      ></ReactNetflixPlayer>
+      ></Player>
     </div>
   );
 }
